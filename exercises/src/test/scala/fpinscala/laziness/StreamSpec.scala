@@ -72,4 +72,25 @@ class StreamSpec extends BaseSpec {
   it("implements find tail recursive") {
     ones.take(BiggerThanStack).find(_ == 2) shouldBe None
   }
+
+  it("implements map") {
+    Stream(1, 2).map(_ + 1).toList shouldBe List(2, 3)
+  }
+
+  it("implements filter") {
+    Stream(1, 2, 3, 4).filter(_ % 2 == 0).toList shouldBe List(2, 4)
+  }
+
+  it("implements headOptionViaFoldRight") {
+    Stream(1, 2).headOptionViaFoldRight shouldBe Some(1)
+    Stream.empty.headOptionViaFoldRight shouldBe None
+  }
+
+  it("implements append via fold right") {
+    (Stream(1, 2) append Stream(3, 4)).toList shouldBe List(1, 2, 3, 4)
+  }
+
+  it("implements flatMap") {
+    Stream(1, 3).flatMap(x => Stream(x, x + 1)).toList shouldBe List(1, 2, 3, 4)
+  }
 }
