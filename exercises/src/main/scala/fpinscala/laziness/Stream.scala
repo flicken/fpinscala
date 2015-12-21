@@ -40,8 +40,13 @@ trait Stream[+A] {
   def take(n: Int): Stream[A] = this match {
     case Empty => Empty
     case Cons(head, tail) =>
-      if (n == 0) Empty
-      else cons(head(), tail().take(n - 1))
+      if (n == 0) {
+        Empty
+      }
+      else {
+        lazy val t = tail()
+        Cons(head, () => t.take(n - 1))
+      }
   }
 
   def drop(n: Int): Stream[A] = this match {
