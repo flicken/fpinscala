@@ -12,6 +12,10 @@ trait Stream[+A] {
       case _ => z
     }
 
+  def scanRightViaFoldRight[B](z: B)(f: (A, B) => B) = foldRight(Stream(z)){ case (a, intermediateResults @ Cons(h, _)) =>
+      Stream.cons(f(a, h()), intermediateResults)
+  }
+
   def exists(p: A => Boolean): Boolean = 
     foldRight(false)((a, b) => p(a) || b) // Here `b` is the unevaluated recursive step that folds the tail of the stream. If `p(a)` returns `true`, `b` will never be evaluated and the computation terminates early.
 
@@ -128,7 +132,31 @@ object Stream {
     else cons(as.head, apply(as.tail: _*))
 
   val ones: Stream[Int] = Stream.cons(1, ones)
-  def from(n: Int): Stream[Int] = sys.error("todo")
+  val onesViaUnfold: Stream[Int] = unfold(())(_ => Some(1 -> ()))
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
+  def constant[A](c: A): Stream[A] = {
+    val s = Stream.cons(c, Stream.constant(c))
+    s
+  }
+  def constantViaUnfold[A](c: A): Stream[A] = unfold(c)(_ => Some(c -> c))
+
+  def from(n: Int): Stream[Int] = Stream.cons(n, Stream.from(n + 1))
+  def fromViaUnfold(n: Int): Stream[Int] = unfold(n)(c => Some((c, c + 1)))
+
+  def fibs: Stream[Int] = {
+    def f(a: Int, b: Int): Stream[Int] = cons(a, f(b, a + b))
+
+    f(0, 1)
+  }
+  def fibsViaUnfold: Stream[Int] = unfold(0 -> 1){ case (a, b) =>
+    Some(a, b -> (a + b))
+  }
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    def doit(state: S): Stream[A] = f(state) match {
+      case Some((a, s)) => cons(a, doit(s))
+      case None => empty
+    }
+    doit(z)
+  }
 }

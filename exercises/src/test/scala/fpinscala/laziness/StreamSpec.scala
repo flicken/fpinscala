@@ -93,4 +93,31 @@ class StreamSpec extends BaseSpec {
   it("implements flatMap") {
     Stream(1, 3).flatMap(x => Stream(x, x + 1)).toList shouldBe List(1, 2, 3, 4)
   }
+
+  it("implements constant") {
+    Stream.constant(2).take(3).toList shouldBe List(2, 2, 2)
+  }
+
+  it("implements from") {
+    Stream.from(2).take(3).toList shouldBe List(2, 3, 4)
+  }
+
+  it("implements fibs") {
+    Stream.fibs.take(7).toList shouldBe List(0, 1, 1, 2, 3, 5, 8)
+  }
+
+  it("implements unfold") {
+    Stream.unfold(0)(n => if (n < 4) Some((n * 2, n + 1)) else None).toList shouldBe List(0, 2, 4, 6)
+  }
+
+  it("implements above via unfold") {
+    Stream.onesViaUnfold.take(3).toList shouldBe List(1, 1, 1)
+    Stream.constantViaUnfold(2).take(3).toList shouldBe List(2, 2, 2)
+    Stream.fromViaUnfold(2).take(3).toList shouldBe List(2, 3, 4)
+    Stream.fibsViaUnfold.take(7).toList shouldBe List(0, 1, 1, 2, 3, 5, 8)
+  }
+
+  it("implements scanRightViaFoldRight") {
+    Stream(1, 2, 3).scanRightViaFoldRight(0)(_ + _).toList shouldBe List(6,5,3,0)
+  }
 }
