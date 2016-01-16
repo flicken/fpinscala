@@ -1,5 +1,6 @@
 package fpinscala.state
 
+import scala.annotation.tailrec
 
 trait RNG {
   def nextInt: (Int, RNG) // Should generate a random `Int`. We'll later define other functions in terms of `nextInt`.
@@ -30,17 +31,71 @@ object RNG {
       (f(a), rng2)
     }
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i, nextRng) = rng.nextInt
+    val value = if (i == Int.MinValue) 0 else Math.abs(i)
+    (value, nextRng)
+  }
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) = {
+    val (i, nextRng) = nonNegativeInt(rng)
+    val value = (if (i == Int.MaxValue) (i - 1) else i).toDouble / Int.MaxValue
+    (value, nextRng)
+  }
 
-  def intDouble(rng: RNG): ((Int,Double), RNG) = ???
 
-  def doubleInt(rng: RNG): ((Double,Int), RNG) = ???
+  def intDouble(rng: RNG): ((Int,Double), RNG) = {
+    val (i, rng1) = nonNegativeInt(rng)
+    val (d, rng2) = double(rng1)
+    ((i, d), rng2)
+  }
 
-  def double3(rng: RNG): ((Double,Double,Double), RNG) = ???
+  def doubleInt(rng: RNG): ((Double,Int), RNG) = {
+    val (d, rng1) = double(rng)
+    val (i, rng2) = nonNegativeInt(rng1)
+    ((d, i), rng2)
+  }
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
+  def double3(rng: RNG): ((Double,Double,Double), RNG) = {
+    val (d1, rng1) = double(rng)
+    val (d2, rng2) = double(rng1)
+    val (d3, rng3) = double(rng2)
+    ((d1, d2, d3), rng3)
+  }
+
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
+    var currRng = rng // Oh noes!  A var?!?
+
+    val values = List.fill(count) {
+      val (next, nextRng) = nonNegativeInt(currRng)
+      currRng = nextRng
+      next
+    }
+    (values, currRng)
+  }
+
+  def intsRecursive(count: Int)(rng: RNG): (List[Int], RNG) = {
+    if (count == 0) {
+      (Nil, rng)
+    } else {
+      val (i, nextRng) = nonNegativeInt(rng)
+      val (list, lastRng) = intsRecursive(count - 1)(nextRng)
+      (i :: list, lastRng)
+    }
+  }
+
+  def intsTailRecursive(count: Int)(rng: RNG): (List[Int], RNG) = {
+    @tailrec
+    def doIt(count: Int, is: Vector[Int], r: RNG): (List[Int], RNG) = {
+      if (count == 0) {
+        (is.toList, r)
+      } else {
+        val (i, nextR) = nonNegativeInt(r)
+        doIt(count - 1, is :+ i, nextR)
+      }
+    }
+    doIt(count, Vector(), rng)
+  }
 
   def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
 
