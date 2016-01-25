@@ -21,14 +21,17 @@ class RNGSpec extends BaseSpec {
   }
 
   it("implements double -- exercise 6.2") {
+    println(double(StaticValue(Int.MaxValue))._1)
+    println(double(StaticValue(Int.MaxValue - 1))._1)
     double(StaticValue(0))._1 shouldBe 0
     double(StaticValue(Int.MinValue))._1 shouldBe 0
     double(StaticValue(Int.MaxValue - 1))._1 should be < 1.0
     double(StaticValue(Int.MaxValue))._1 should be < 1.0
+    double(StaticValue(Int.MaxValue - 1))._1 should not be double(StaticValue(Int.MaxValue))._1
   }
 
   it("implements intDouble -- exercise 6.3") {
-    intDouble(IncreasingValue(-1))._1 shouldBe (1, 0.0)
+    intDouble(IncreasingValue(-1))._1 shouldBe (-1, 0.0)
   }
 
   it("implements doubleInt -- exercise 6.3") {
@@ -36,7 +39,7 @@ class RNGSpec extends BaseSpec {
   }
 
   it("implements double3 -- exercise 6.3") {
-    double3(IncreasingValue(0))._1 shouldBe (0.0, 1.0 / Int.MaxValue, 2.0 / Int.MaxValue)
+    double3(IncreasingValue(0))._1 shouldBe (0.0, 1.0 / (Int.MaxValue.toDouble + 1), 2.0 / (Int.MaxValue.toDouble + 1))
   }
 
   it("implements ints -- exercise 6.4") {
@@ -62,6 +65,43 @@ class RNGSpec extends BaseSpec {
     intsTailRecursive(2)(StaticValue(1))._1 shouldBe List(1, 1)
     intsTailRecursive(2)(IncreasingValue(1))._1 shouldBe List(1, 2)
     intsTailRecursive(LargerThanStack)(IncreasingValue(1))._1 should have length 100000
+  }
+
+
+  it("implements doubleViaMapViaMap -- exercise 6.5") {
+    println(doubleViaMap(StaticValue(Int.MaxValue))._1)
+    println(doubleViaMap(StaticValue(Int.MaxValue - 1))._1)
+    doubleViaMap(StaticValue(0))._1 shouldBe 0
+    doubleViaMap(StaticValue(Int.MinValue))._1 shouldBe 0
+    doubleViaMap(StaticValue(Int.MaxValue - 1))._1 should be < 1.0
+    doubleViaMap(StaticValue(Int.MaxValue))._1 should be < 1.0
+    doubleViaMap(StaticValue(Int.MaxValue - 1))._1 should not be doubleViaMap(StaticValue(Int.MaxValue))._1
+  }
+
+  it("implements map2 -- exercise 6.6") {
+    RNG.map2(nonNegativeInt, nonNegativeInt)((_, _))(IncreasingValue(12))._1 shouldBe (12, 13)
+    RNG.map2(nonNegativeInt, nonNegativeInt)(List(_, _))(IncreasingValue(12))._1 shouldBe List(12, 13)
+  }
+
+  it("implements both -- exercise 6.6") {
+    RNG.intDoubleViaBoth(IncreasingValue(-1))._1 shouldBe(-1, 0.0)
+    RNG.doubleIntViaBoth(IncreasingValue(0))._1 shouldBe(0.0, 1)
+  }
+
+  it("implements sequence -- exercise 6.7") {
+    import RNG._
+    sequence(List(int, int, double _))(IncreasingValue(-2))._1 shouldBe List(-2, -1, 0.0)
+  }
+
+  it("implements intsViaSequences -- exercise 6.7") {
+    RNG.intsViaSequence(10)(IncreasingValue(-5))._1 shouldBe List(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4)
+  }
+
+  it("implements flatMap -- exercise 6.8") {
+    val doubleIfZero = flatMap(int)(i => if (i == 0) double3 else int)
+
+    doubleIfZero(StaticValue(0))._1 shouldBe ((0.0, 0.0, 0.0))
+    doubleIfZero(StaticValue(1))._1 shouldBe 1
   }
 
   val LargerThanStack = 100000
