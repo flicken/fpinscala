@@ -1,7 +1,6 @@
 package fpinscala.state
 
 import fpinscala.BaseSpec
-import fpinscala.state.RNG._
 
 class RNGSpec extends BaseSpec {
   import RNG._
@@ -10,6 +9,13 @@ class RNGSpec extends BaseSpec {
   }
   case class IncreasingValue(value: Int) extends RNG {
     override def nextInt: (Int, RNG) = (value, copy(value + 1))
+  }
+  case class DecreasingValue(value: Int) extends RNG {
+    override def nextInt: (Int, RNG) = (value, copy(value - 1))
+  }
+
+  it("can use unit") {
+    unit("a")(StaticValue(2))._1 shouldBe "a"
   }
 
   it("implements nonNegativeInt - exercise 6.1") {
@@ -83,6 +89,11 @@ class RNGSpec extends BaseSpec {
     RNG.map2(nonNegativeInt, nonNegativeInt)(List(_, _))(IncreasingValue(12))._1 shouldBe List(12, 13)
   }
 
+  it("implements map2ViaFlatMap -- exercise 6.9") {
+    map2ViaFlatMap(nonNegativeInt, nonNegativeInt)((_, _))(IncreasingValue(12))._1 shouldBe (12, 13)
+    map2ViaFlatMap(nonNegativeInt, nonNegativeInt)(List(_, _))(IncreasingValue(12))._1 shouldBe List(12, 13)
+  }
+
   it("implements both -- exercise 6.6") {
     RNG.intDoubleViaBoth(IncreasingValue(-1))._1 shouldBe(-1, 0.0)
     RNG.doubleIntViaBoth(IncreasingValue(0))._1 shouldBe(0.0, 1)
@@ -102,6 +113,15 @@ class RNGSpec extends BaseSpec {
 
     doubleIfZero(StaticValue(0))._1 shouldBe ((0.0, 0.0, 0.0))
     doubleIfZero(StaticValue(1))._1 shouldBe 1
+  }
+
+  it("implements nonNegativeLessThan -- exercise 6.8") {
+    nonNegativeLessThan(4)(DecreasingValue(10))._1 shouldBe 3
+    nonNegativeLessThan(4)(DecreasingValue(2))._1 shouldBe 2
+  }
+
+  it("implements mapViaFlatMap -- exercise 6.9") {
+    mapViaFlatMap(int)(_ + 1)(StaticValue(1))._1 shouldBe 2
   }
 
   val LargerThanStack = 100000
